@@ -1,0 +1,29 @@
+{
+  "name": "bb-8",
+  "version": "1.0.0",
+  "description": "robot control",
+  "main": "index.js",
+  "dependencies": {
+    "noble": "^1.3.0",
+    "sphero": "^0.8.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pnewo/BB-8.git"
+  },
+  "keywords": [
+    "bb-8",
+    "robot",
+    "sphero"
+  ],
+  "author": "pnewo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pnewo/BB-8/issues"
+  },
+  "homepage": "https://github.com/pnewo/BB-8#readme"
+}
