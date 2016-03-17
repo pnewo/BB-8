@@ -1,3 +1,5 @@
+'use strict'
+
 import {h} from '@cycle/dom';
 import hh from 'hyperscript-helpers';
 const {div, h1, h3, h6, ul, li, button, section, p} = hh(h);

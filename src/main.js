@@ -1,4 +1,6 @@
-import Rx from 'rx'
+'use strict'
+
+//import Rx from 'rx'
 import Cycle from '@cycle/core'
 import {makeDOMDriver} from '@cycle/dom'
 import intent from './intent'

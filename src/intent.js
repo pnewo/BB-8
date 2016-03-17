@@ -1,36 +1,61 @@
+'use strict'
+
 import {Observable} from 'rx'
 
 function intent(DOM) {
-  const AWSDMap = {65: 'left', 68: 'right', 87: 'frwd', 83: 'rev'}
-  const moveKeys = ['frwd', 'rev']
-  const frwdLeft = ['frwd', 'left']
-  const keyDirections$ = Observable.merge(
-      Observable.fromEvent(document, 'keydown'),
-      Observable.fromEvent(document, 'keyup')
-    ).filter(e => {
-        const AWSD = Object.keys(AWSDMap).map(s => parseInt(s, 10))
-        const k = e.key || e.which;
-        return AWSD.includes(k)
-      }
-    ).map(
-      (e) => {
-        return {direction: AWSDMap[e.key || e.which], isDown: (e.type === 'keydown')}
-      }
-    ).distinctUntilChanged()
+  const keyMap = {a: 65, d: 68, w: 87, s: 83}
 
-  const moveDirections$ = keyDirections$.filter(dir => moveKeys.includes(dir.direction))
-  const turnDirections$ = keyDirections$.filter(dir => !moveKeys.includes(dir.direction))
+  const keyDown$ = Observable.fromEvent(document, 'keydown')
+  const keyUp$ = Observable.fromEvent(document, 'keyup')
+  const keyPressed$ = Observable.merge(keyDown$, keyUp$)
+
+  const aFilter = (e) => (e.key || e.which) === keyMap.a
+  const dFilter = (e) => (e.key || e.which) === keyMap.d
+  const wFilter = (e) => (e.key || e.which) === keyMap.w
+  const sFilter = (e) => (e.key || e.which) === keyMap.s
+
+  const distinctKey = (e) => e.type + (e.key || e.which)
+
+  const aPressed$ = keyPressed$.filter(aFilter).distinctUntilChanged(distinctKey)
+  const dPressed$ = keyPressed$.filter(dFilter).distinctUntilChanged(distinctKey)
+  const wPressed$ = keyPressed$.filter(wFilter).distinctUntilChanged(distinctKey)
+  const sPressed$ = keyPressed$.filter(sFilter).distinctUntilChanged(distinctKey)
+
+  const aUp$ = keyUp$.filter(aFilter)
+  const dUp$ = keyUp$.filter(dFilter)
+
+  const aHold$ = aPressed$.flatMap((key) => {
+    if (key.type === 'keydown') {
+      return Observable.timer(0,500).takeUntil(aUp$)
+    }
+    return Observable.empty()
+  })
+  const dHold$ = dPressed$.flatMap((key) => {
+    if (key.type === 'keydown') {
+      return Observable.timer(0,500).takeUntil(dUp$)
+    }
+    return Observable.empty()
+  })
+
+  const speedChange$ = Observable.merge(sPressed$, wPressed$)
+
   return {
-    scroll$: Observable.merge(
-      DOM.select('.bb-8').events('click').map(() => +2),
-      DOM.select('.css-robot-info').events('click').map(() => -2)
+    turn$: Observable.merge(
+        aHold$.map(() => -1),
+        dHold$.map(() => 1),
+        sPressed$.map((key) => {
+          if (key.type === 'keydown') {
+            return -180
+          }
+          return 180
+        })
     ),
-    move$: moveDirections$.map(dir => {
-      return {isFrwd: frwdLeft.includes(dir.direction), isDown: dir.isDown}
-    }),
-    turn$: turnDirections$.map(dir => {
-      return {isLeft: frwdLeft.includes(dir.direction), isDown: dir.isDown}
-    }),
+    speed$: speedChange$.map((key) => {
+        if (key.type === 'keydown') {
+          return 100
+        }
+        return 0
+      })
   }
 }
 
