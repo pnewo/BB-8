@@ -1,10 +1,15 @@
 'use strict'
 
-import {h} from '@cycle/dom';
-import hh from 'hyperscript-helpers';
-const {div, h1, h3, h6, ul, li, button, section, p} = hh(h);
+import {h} from '@cycle/dom'
+import hh from 'hyperscript-helpers'
+import io from 'socket.io-client'
+const {div, h1, h3, h6, ul, li, button, section, p} = hh(h)
+const socket = io()
+
 
 function movementMonitor(state) {
+
+  socket.emit('move', {direction: state.direction, speed: state.speed})
   return (
     div('.css-movement-monitor',[
       h3('.css-robot-status',
