@@ -3,6 +3,19 @@
 var app = require('express')()
 var http = require('http').Server(app)
 var io = require('socket.io')(http)
+var sphero = require("sphero"),
+    bb8 = sphero('1ceb4e5278ab4effa499921ef6a5344d')//sphero("45be286daaaf440183c458cc45526660")
+
+bb8.connect(function() {
+  console.log('BB8 connected')
+  io.emit('status',{ connected: 'true' })
+
+  var rColor = Math.floor(Math.random() * 255),
+      gColor = Math.floor(Math.random() * 255),
+      bColor = Math.floor(Math.random() * 255)
+
+  bb8.color({ red: rColor, green: gColor, blue: bColor })
+})
 
 app.get('/', function(req, res){
   res.sendFile('index.html', { root: __dirname })
@@ -13,9 +26,9 @@ app.get('/dist/index.js', function(req, res){
 });
 
 io.on('connection', function(socket){
-  console.log('socket connected')
   socket.on('move', function(mv){
     console.log('direction:', mv.direction, 'speed:', mv.speed)
+    bb8.roll(parseInt(mv.speed,10), parseInt(mv.direction,10))
   });
 });
 

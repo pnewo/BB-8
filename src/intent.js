@@ -1,10 +1,30 @@
 'use strict'
 
 import {Observable} from 'rx'
+import io from 'socket.io-client'
 
 function intent(DOM) {
   const keyMap = {a: 65, d: 68, w: 87, s: 83}
+  const socket = io()
 
+  const serverStatus$ = Observable.fromEventPattern(
+      function (h) {
+        socket.on('status',h);
+      }
+  );
+/*
+  socket.on('status', (data) => {
+    console.log('data', data)
+  })
+  const serverStatus$ = Observable.create(observer => {
+    socket.on('status', (data) => {
+        observer.onNext(data)
+    })
+    return {
+        dispose : socket.close
+    }
+  })
+*/
   const keyDown$ = Observable.fromEvent(document, 'keydown')
   const keyUp$ = Observable.fromEvent(document, 'keyup')
   const keyPressed$ = Observable.merge(keyDown$, keyUp$)
@@ -26,13 +46,13 @@ function intent(DOM) {
 
   const aHold$ = aPressed$.flatMap((key) => {
     if (key.type === 'keydown') {
-      return Observable.timer(0,500).takeUntil(aUp$)
+      return Observable.timer(0,100).takeUntil(aUp$)
     }
     return Observable.empty()
   })
   const dHold$ = dPressed$.flatMap((key) => {
     if (key.type === 'keydown') {
-      return Observable.timer(0,500).takeUntil(dUp$)
+      return Observable.timer(0,100).takeUntil(dUp$)
     }
     return Observable.empty()
   })
@@ -40,9 +60,10 @@ function intent(DOM) {
   const speedChange$ = Observable.merge(sPressed$, wPressed$)
 
   return {
+    status$: serverStatus$,
     turn$: Observable.merge(
-        aHold$.map(() => -1),
-        dHold$.map(() => 1),
+        aHold$.map(() => -10),
+        dHold$.map(() => 10),
         sPressed$.map((key) => {
           if (key.type === 'keydown') {
             return -180
@@ -52,7 +73,7 @@ function intent(DOM) {
     ),
     speed$: speedChange$.map((key) => {
         if (key.type === 'keydown') {
-          return 100
+          return 150
         }
         return 0
       })

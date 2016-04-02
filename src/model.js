@@ -13,6 +13,11 @@ const initialState = Immutable.fromJS({
 
 function makeUpdate$(actions) {
 
+  const updateStatus$ = actions.status$.map(status => function updateStatus(oldState) {
+    console.log('model new status', status)
+    return oldState.update('isRobotConnected', () => status.connected)
+  })
+
   const updateSpeed$ = actions.speed$.map(speed => function updateStateWhenMove(oldState) {
     return oldState.update('speed', () => speed)
   })
@@ -31,6 +36,7 @@ function makeUpdate$(actions) {
   })
 
   return Observable.merge(
+    updateStatus$,
     updateSpeed$,
     updateDirection$
   )
