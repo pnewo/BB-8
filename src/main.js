@@ -18,7 +18,7 @@ function main(sources) {
 }
 
 const drivers = {
-  DOM: makeDOMDriver('.app-container'),
+  DOM: makeDOMDriver('#app-container'),
 }
 
 Cycle.run(main, drivers)

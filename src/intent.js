@@ -1,38 +1,58 @@
 'use strict'
 
-import {Observable} from 'rx'
+import {Observable, Scheduler, ReplaySubject} from 'rx'
 import io from 'socket.io-client'
 
 function intent(DOM) {
   const keyMap = {a: 65, d: 68, w: 87, s: 83}
   const socket = io()
+  //socket.on('connect',function(){console.log('connect')})
+
+  const socketConnect$ = Observable.fromEventPattern(
+    function (h) {
+      socket.on('connect',h)
+    }
+  );
+
+  const socketDisconnect$ = Observable.fromEventPattern(
+    function (h) {
+      socket.on('disconnect',h)
+    }
+  );
 
   const serverStatus$ = Observable.fromEventPattern(
-      function (h) {
-        socket.on('status',h);
-      }
-  );
-/*
-  socket.on('status', (data) => {
-    console.log('data', data)
-  })
-  const serverStatus$ = Observable.create(observer => {
-    socket.on('status', (data) => {
-        observer.onNext(data)
-    })
-    return {
-        dispose : socket.close
+    function (h) {
+      socket.on('status',h)
     }
-  })
-*/
+  );
+
+  const audio$ = new ReplaySubject()
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(
+    media => {
+      let audioContext = new AudioContext()
+      let audioSrc = audioContext.createMediaStreamSource(media)
+      let analyser = audioContext.createAnalyser()
+      audioSrc.connect(analyser)
+      let frequencyData = new Uint8Array(analyser.frequencyBinCount)
+      function renderFrame() {
+       requestAnimationFrame(renderFrame)
+       analyser.getByteFrequencyData(frequencyData)
+       audio$.onNext(frequencyData)
+      }
+      renderFrame()
+    })
+  //audio$.subscribe(data => console.log('audio',data))
+
+
+
   const keyDown$ = Observable.fromEvent(document, 'keydown')
   const keyUp$ = Observable.fromEvent(document, 'keyup')
   const keyPressed$ = Observable.merge(keyDown$, keyUp$)
 
-  const aFilter = (e) => (e.key || e.which) === keyMap.a
-  const dFilter = (e) => (e.key || e.which) === keyMap.d
-  const wFilter = (e) => (e.key || e.which) === keyMap.w
-  const sFilter = (e) => (e.key || e.which) === keyMap.s
+  const aFilter = (e) => (e.keyCode || e.which) === keyMap.a
+  const dFilter = (e) => (e.keyCode || e.which) === keyMap.d
+  const wFilter = (e) => (e.keyCode || e.which) === keyMap.w
+  const sFilter = (e) => (e.keyCode || e.which) === keyMap.s
 
   const distinctKey = (e) => e.type + (e.key || e.which)
 
@@ -60,23 +80,28 @@ function intent(DOM) {
   const speedChange$ = Observable.merge(sPressed$, wPressed$)
 
   return {
+    isSocketConnected$: Observable.merge(
+      socketConnect$.map(() => true),
+      socketDisconnect$.map(() => false)
+    ),
     status$: serverStatus$,
     turn$: Observable.merge(
-        aHold$.map(() => -10),
-        dHold$.map(() => 10),
-        sPressed$.map((key) => {
-          if (key.type === 'keydown') {
-            return -180
-          }
-          return 180
-        })
+      aHold$.map(() => -10),
+      dHold$.map(() => 10),
+      sPressed$.map((key) => {
+        if (key.type === 'keydown') {
+          return -180
+        }
+        return 180
+      })
     ),
     speed$: speedChange$.map((key) => {
-        if (key.type === 'keydown') {
-          return 150
-        }
-        return 0
-      })
+      if (key.type === 'keydown') {
+        return 150
+      }
+      return 0
+    }),
+    audio$: audio$
   }
 }
 

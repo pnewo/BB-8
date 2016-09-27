@@ -13,10 +13,14 @@ function movementMonitor(state) {
   return (
     div('.css-movement-monitor',[
       h3('.css-robot-status',
+        state.isSocketConnected ? 'Socket online' : 'Socket offline'
+      ),
+      h3('.css-robot-status',
         state.isRobotConnected ? 'Robot online' : 'Robot offline'
       ),
       p('.css-robot-info', `Robot moving in direction ${state.direction} with speed ${state.speed}`),
       p('.css-robot-info', `Color is set to ${JSON.stringify(state.color)}`),
+      p('.css-robot-info', `Audio values ${JSON.stringify(state.audio)}`),
     ])
   )
 }

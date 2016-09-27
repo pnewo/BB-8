@@ -9,9 +9,13 @@ const initialState = Immutable.fromJS({
   direction: 0,
   speed: 0,
   color: {r: 0, g: 0, b:0},
+  audio: []
 })
 
 function makeUpdate$(actions) {
+  const updateSocketStatus$ = actions.isSocketConnected$.map(isConnected => function updateSocketStatus(oldState) {
+      return oldState.update('isSocketConnected', () => isConnected)
+  })
 
   const updateStatus$ = actions.status$.map(status => function updateStatus(oldState) {
     console.log('model new status', status)
@@ -35,10 +39,16 @@ function makeUpdate$(actions) {
     }
   })
 
+  const updateAudio$ = actions.audio$.map(audio => function updateAudio(oldState){
+    return oldState.update('audio', () => audio)
+  })
+
   return Observable.merge(
+    updateSocketStatus$,
     updateStatus$,
     updateSpeed$,
-    updateDirection$
+    updateDirection$,
+    updateAudio$
   )
 }
 
