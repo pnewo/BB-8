@@ -47,8 +47,8 @@ function makeUpdate$(actions) {
     updateSocketStatus$,
     updateStatus$,
     updateSpeed$,
-    updateDirection$,
-    updateAudio$
+    updateDirection$//,
+    //updateAudio$
   )
 }
 

@@ -41,9 +41,6 @@ function intent(DOM) {
       }
       renderFrame()
     })
-  //audio$.subscribe(data => console.log('audio',data))
-
-
 
   const keyDown$ = Observable.fromEvent(document, 'keydown')
   const keyUp$ = Observable.fromEvent(document, 'keyup')
